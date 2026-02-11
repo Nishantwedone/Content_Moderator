@@ -6,8 +6,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function analyzeContent(title: string, content: string | null, imageUrl: string | null) {
     try {
-        // Use gemini-1.5-flash-latest which acts as a stable alias
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        // Use gemini-flash-latest which was previously working
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const promptParts: any[] = [
             `You are an AI Content Moderator. Analyze this post.
