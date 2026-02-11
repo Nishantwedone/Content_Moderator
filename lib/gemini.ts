@@ -1,42 +1,72 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Buffer } from "buffer"; // Required for image processing
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-export async function analyzeContent(title: string, content: string | null) {
+export async function analyzeContent(title: string, content: string | null, imageUrl: string | null) {
     try {
+        // Use gemini-flash-latest which is available for this API key
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-        const prompt = `
-        You are an AI Content Moderator for a social platform.
-        Analyze the following post for safety.
-        
-        Title: "${title}"
-        Content: "${content || "No content"}"
-        
-        Rules:
-        1. Hate Speech, Harassment, Violence, Self-Harm, and Sexual Content are STRICTLY PROHIBITED.
-        2. Spam or Scams are PROHIBITED.
-        3. Political or controversial topics are ALLOWED but should be flagged if inflammatory.
-        4. If the content is safe, typically helpful, or neutral, status should be "APPROVED".
-        5. If the content violates rules or is ambiguous, status should be "FLAGGED".
-        6. If the content is clearly illegal or severe (e.g. child exploitation, terrorism), status should be "REJECTED".
+        const promptParts: any[] = [
+            `You are an AI Content Moderator. Analyze this post.
+            
+            Title: "${title}"
+            Content: "${content || "No text content"}"
+            
+            Rules:
+            1. REJECT: Hate Speech, Violence, Self-Harm, Sexual/Nudity, Illegal acts.
+            2. REJECT: Spam, Scams.
+            3. FLAG: Controversial/Inflammatory political content, or Harassment.
+            4. APPROVE: Safe, Neutral, Helpful content.
 
-        Respond ONLY with a valid JSON object in this format:
-        {
-            "status": "APPROVED" | "FLAGGED" | "REJECTED",
-            "reason": "Short explanation of the decision (max 20 words)"
+            Respond ONLY with JSON:
+            { "status": "APPROVED" | "FLAGGED" | "REJECTED", "reason": "Max 10 words explanation" }`
+        ];
+
+        // Handle Image if present
+        if (imageUrl) {
+            // Check if it's a base64 string (from file upload)
+            if (imageUrl.startsWith("data:image")) {
+                const base64Data = imageUrl.split(",")[1];
+                const mimeType = imageUrl.split(";")[0].split(":")[1];
+
+                promptParts.push({
+                    inlineData: {
+                        data: base64Data,
+                        mimeType: mimeType
+                    }
+                });
+            }
+            // Handle public URLs (fetch and convert to base64)
+            else if (imageUrl.startsWith("http")) {
+                try {
+                    const imageResp = await fetch(imageUrl);
+                    const arrayBuffer = await imageResp.arrayBuffer();
+                    const base64Data = Buffer.from(arrayBuffer).toString("base64");
+                    const mimeType = imageResp.headers.get("content-type") || "image/jpeg";
+
+                    promptParts.push({
+                        inlineData: {
+                            data: base64Data,
+                            mimeType: mimeType
+                        }
+                    });
+                } catch (e) {
+                    console.error("Failed to fetch image for analysis:", e);
+                    // Continue with text analysis only if image fails
+                }
+            }
         }
-        `;
 
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent(promptParts);
         const response = await result.response;
         const text = response.text();
 
-        // Clean up markdown code blocks if present
         const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim();
-
         const analysis = JSON.parse(jsonStr);
+
         return {
             status: analysis.status as "APPROVED" | "FLAGGED" | "REJECTED",
             reason: analysis.reason as string
@@ -44,13 +74,9 @@ export async function analyzeContent(title: string, content: string | null) {
 
     } catch (error: any) {
         console.error("Gemini Analysis FAILED:", error);
-        if (error.response) {
-            console.error("Gemini API Error details:", JSON.stringify(error.response, null, 2));
-        }
-        // Fallback to FLAGGED if AI fails, so a human can review
         return {
             status: "FLAGGED",
-            reason: `AI Error: ${error.message || "Unknown error"}`
+            reason: "AI Analysis Error" // Keep it short
         };
     }
 }

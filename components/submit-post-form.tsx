@@ -83,9 +83,9 @@ export function SubmitPostForm({ communities }: { communities: { id: string; nam
 
             const data = await response.json()
 
-            if (data.status === "FLAGGED") {
-                toast.warning("Post marked as flagged and violates policies", {
-                    description: "Your post is under manual review.",
+            if (data.status === "FLAGGED" || data.status === "REJECTED") {
+                toast.warning("Post flagged for review", {
+                    description: "Your post contains content that violates our policies and is under manual review.",
                     duration: 6000,
                 })
             } else {

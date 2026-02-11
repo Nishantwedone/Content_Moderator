@@ -27,10 +27,11 @@ export async function POST(req: Request) {
 
 
         // AI Moderation Analysis
-        const analysis = await analyzeContent(body.title, body.content || null);
+        const analysis = await analyzeContent(body.title, body.content || null, body.imageUrl || null);
 
         // Determine status based on AI decision
-        const status = analysis.status;
+        // If AI rejects it, we set it to FLAGGED so a human moderator can review it manually to confirm.
+        const status = analysis.status === "REJECTED" ? "FLAGGED" : analysis.status;
 
         const post = await prisma.post.create({
             data: {
