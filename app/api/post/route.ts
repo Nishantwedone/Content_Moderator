@@ -6,6 +6,8 @@ import { NextResponse } from "next/server"
 import * as z from "zod"
 import { analyzeContent } from "@/lib/gemini"
 
+export const maxDuration = 30; // Allow up to 30 seconds for AI analysis
+
 const postSchema = z.object({
     title: z.string().min(2),
     content: z.string().optional(),

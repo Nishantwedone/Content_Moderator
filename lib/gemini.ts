@@ -6,8 +6,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function analyzeContent(title: string, content: string | null, imageUrl: string | null) {
     try {
-        // Use gemini-flash-latest which is available for this API key
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Use gemini-1.5-flash which is the standard fast model
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const promptParts: any[] = [
             `You are an AI Content Moderator. Analyze this post.
@@ -74,9 +74,10 @@ export async function analyzeContent(title: string, content: string | null, imag
 
     } catch (error: any) {
         console.error("Gemini Analysis FAILED:", error);
+        // RETURN THE ACTUAL ERROR for debugging
         return {
             status: "FLAGGED",
-            reason: "AI Analysis Error" // Keep it short
+            reason: `AI Error: ${error.message || "Unknown error"}`
         };
     }
 }
