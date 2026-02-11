@@ -116,8 +116,17 @@ export default async function ModeratorDashboard() {
                 ) : (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 items-start">
                         {flaggedPosts.map((post) => (
-                            // @ts-ignore - Date serialization issue workaround in RSC
-                            <ModerationCard key={post.id} post={post} />
+                            <ModerationCard
+                                key={post.id}
+                                post={{
+                                    ...post,
+                                    createdAt: post.createdAt.toISOString(),
+                                    moderationLogs: post.moderationLogs.map(log => ({
+                                        ...log,
+                                        createdAt: log.createdAt.toISOString()
+                                    }))
+                                }}
+                            />
                         ))}
                     </div>
                 )}

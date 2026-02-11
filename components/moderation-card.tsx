@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -51,7 +51,11 @@ export function ModerationCard({ post }: { post: Post }) {
     const iconColor = isSevere ? "text-rose-500" : "text-amber-500";
 
     // Format date safely
-    const dateStr = new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    // Fix hydration mismatch by rendering date only on client
+    const [dateStr, setDateStr] = useState<string>("")
+    useEffect(() => {
+        setDateStr(new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }))
+    }, [post.createdAt])
 
     return (
         <Card className="flex flex-col h-full overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
@@ -87,7 +91,7 @@ export function ModerationCard({ post }: { post: Post }) {
                     <span>•</span>
                     <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span suppressHydrationWarning>{dateStr}</span>
+                        <span>{dateStr || "Loading..."}</span>
                     </div>
                 </div>
             </CardHeader>

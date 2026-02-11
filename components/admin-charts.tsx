@@ -24,13 +24,16 @@ export function AdminCharts({ communityStats, statusStats }: ChartProps) {
                             <XAxis
                                 dataKey="name"
                                 stroke="#888888"
-                                fontSize={12}
+                                fontSize={10} // Reduced font size for mobile
                                 tickLine={false}
                                 axisLine={false}
+                                interval={0} // Show all labels (might overlap, let's leave default or handle overlap)
+                            // angle={-45} // Optional: tilt labels if needed
+                            // textAnchor="end"
                             />
                             <YAxis
                                 stroke="#888888"
-                                fontSize={12}
+                                fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
                                 tickFormatter={(value) => `${value}`}
@@ -61,8 +64,8 @@ export function AdminCharts({ communityStats, statusStats }: ChartProps) {
                                 data={statusStats}
                                 cx="50%"
                                 cy="50%"
-                                innerRadius={60}
-                                outerRadius={100}
+                                innerRadius="40%" // Responsive percentage
+                                outerRadius="70%" // Responsive percentage
                                 fill="#8884d8"
                                 paddingAngle={5}
                                 dataKey="value"

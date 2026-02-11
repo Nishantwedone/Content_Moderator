@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import {
     LayoutDashboard,
     FileText,
@@ -102,6 +103,7 @@ export default async function AdminDashboard() {
                         icon={<FileText className="h-6 w-6 text-emerald-500" />}
                         trend="+12% from last week"
                         trendUp={true}
+                        href="/dashboard/admin/content?status=APPROVED"
                     />
                     <StatCard
                         title="Flagged Posts"
@@ -110,6 +112,7 @@ export default async function AdminDashboard() {
                         trend="Requires attention"
                         alert={flaggedPosts > 0}
                         trendUp={false}
+                        href="/dashboard/moderator"
                     />
                     <StatCard
                         title="Total Users"
@@ -155,8 +158,8 @@ export default async function AdminDashboard() {
                                         </div>
                                         <div className="ml-auto font-medium text-xs">
                                             <span className={`px-2 py-1 rounded-full ${post.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
-                                                    post.status === 'FLAGGED' ? 'bg-rose-100 text-rose-700' :
-                                                        'bg-slate-100 text-slate-700'
+                                                post.status === 'FLAGGED' ? 'bg-rose-100 text-rose-700' :
+                                                    'bg-slate-100 text-slate-700'
                                                 }`}>
                                                 {post.status}
                                             </span>
@@ -206,9 +209,9 @@ export default async function AdminDashboard() {
     )
 }
 
-function StatCard({ title, value, icon, trend, alert = false, trendUp = true }: { title: string, value: number, icon: React.ReactNode, trend: string, alert?: boolean, trendUp?: boolean }) {
-    return (
-        <div className={`p-6 rounded-2xl border bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 hover:border-indigo-200 ${alert ? 'border-rose-200 bg-rose-50 dark:bg-rose-900/10' : 'border-slate-200 dark:border-slate-800'}`}>
+function StatCard({ title, value, icon, trend, alert = false, trendUp = true, href }: { title: string, value: number, icon: React.ReactNode, trend: string, alert?: boolean, trendUp?: boolean, href?: string }) {
+    const CardContent = (
+        <div className={`p-6 rounded-2xl border bg-white dark:bg-slate-900 shadow-sm hover:shadow-lg transition-all transform hover:-translate-y-1 hover:border-indigo-200 cursor-pointer ${alert ? 'border-rose-200 bg-rose-50 dark:bg-rose-900/10' : 'border-slate-200 dark:border-slate-800'}`}>
             <div className="flex items-center justify-between mb-4">
                 <div className={`p-2 rounded-lg ${alert ? 'bg-white dark:bg-slate-800' : 'bg-slate-100 dark:bg-slate-800'} ${alert ? 'text-rose-500' : 'text-indigo-600'}`}>
                     {icon}
@@ -227,4 +230,14 @@ function StatCard({ title, value, icon, trend, alert = false, trendUp = true }: 
             </div>
         </div>
     )
+
+    if (href) {
+        return (
+            <Link href={href} className="block">
+                {CardContent}
+            </Link>
+        )
+    }
+
+    return CardContent
 }
