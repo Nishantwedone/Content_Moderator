@@ -54,15 +54,46 @@ export function SubmitPostForm({ communities }: { communities: { id: string; nam
 
     const imageUrlValue = form.watch("imageUrl");
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Resize to max 800px width
+                    const scaleSize = MAX_WIDTH / img.width;
+                    const width = (scaleSize < 1) ? MAX_WIDTH : img.width;
+                    const height = (scaleSize < 1) ? img.height * scaleSize : img.height;
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG at 70% quality
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(compressedBase64);
+                };
+                img.onerror = (error) => reject(error);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                form.setValue("imageUrl", base64String);
-            };
-            reader.readAsDataURL(file);
+            try {
+                // Compress image before setting it
+                const compressedImage = await compressImage(file);
+                form.setValue("imageUrl", compressedImage);
+            } catch (error) {
+                console.error("Image compression failed", error);
+                toast.error("Failed to process image");
+            }
         }
     };
 
